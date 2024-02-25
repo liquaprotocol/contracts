@@ -80,9 +80,9 @@ contract LiquaGateway is CCIPReceiver, OwnerIsCreator {
         return i_ccipRouter.getFee(destinationChainSelector, message); // + commission
     }
 
-	/// @notice Returns the CCIP router contract.
-    function getRouter() external view returns (IRouterClient) {
-        return i_ccipRouter;
+	// /// @notice Returns the CCIP router contract.
+    function getRouter() public override view returns (address) {
+        return getRouter();
     }
 
     /// @notice Simply forwards the request to the CCIP router and returns the result.
