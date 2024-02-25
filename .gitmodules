@@ -1,3 +1,6 @@
 [submodule "transfer/lib/openzeppelin-contracts"]
 	path = transfer/lib/openzeppelin-contracts
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts
+[submodule "transfer/lib/openzeppelin-foundry-upgrades"]
+	path = transfer/lib/openzeppelin-foundry-upgrades
+	url = https://github.com/OpenZeppelin/openzeppelin-foundry-upgrades
