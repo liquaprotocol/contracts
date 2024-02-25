@@ -31,6 +31,7 @@ contract LiquaGateway is CCIPReceiver, OwnerIsCreator {
     IRouterClient internal i_ccipRouter;
     address internal i_link;
     uint256 internal i_rate;
+    bytes32[] public receivedMessages; // Array to keep track of the IDs of received messages.
 
 	constructor(
         address _router,
@@ -57,8 +58,8 @@ contract LiquaGateway is CCIPReceiver, OwnerIsCreator {
         uint64 indexed sourceChainSelctor, // The chain selector of the source chain.
         address sender, // The address of the sender from the source chain.
         string message, // The message that was received.
-        Client.EVMTokenAmount tokenAmmount, // The token amount that was received.
-        uint256 fees // The fees paid for sending the message.
+        Client.EVMTokenAmount tokenAmmount // The token amount that was received.
+        // uint256 fees // The fees paid for sending the message.
     );
 
 	/// @notice Fallback function to allow the contract to receive Ether.
@@ -138,7 +139,7 @@ contract LiquaGateway is CCIPReceiver, OwnerIsCreator {
                 evm2AnyMessage
             );
         } else {
-        // Send the message through the router and store the returned message ID
+            // Send the message through the router and store the returned message ID
             messageId = IRouterClient(i_router).ccipSend{value: fees}(
                 destinationChainSelector,
                 evm2AnyMessage
@@ -156,14 +157,30 @@ contract LiquaGateway is CCIPReceiver, OwnerIsCreator {
         );
     }
 
-	event MessageSent(
-        bytes32 indexed messageId, // The unique ID of the CCIP message.
-        uint64 indexed destinationChainSelector, // The chain selector of the destination chain.
-        address receiver, // The address of the receiver on the destination chain.
-        string message, // The text being sent.
-        address feeToken, // the token address used to pay CCIP fees.
-        uint256 fees // The fees paid for sending the CCIP message.
-    );
+    /// handle a received message
+    function _ccipReceive(
+        Client.Any2EVMMessage memory any2EvmMessage
+    ) internal override {
+        bytes32 messageId = any2EvmMessage.messageId; // fetch the messageId
+        uint64 sourceChainSelector = any2EvmMessage.sourceChainSelector; // fetch the source chain identifier (aka selector)
+        address sender = abi.decode(any2EvmMessage.sender, (address)); // abi-decoding of the sender address
+        Client.EVMTokenAmount[] memory tokenAmounts = any2EvmMessage
+            .destTokenAmounts;
+        string memory message = abi.decode(any2EvmMessage.data, (string)); // abi-decoding of the sent string message
+        receivedMessages.push(messageId);
+
+        //TODO: handle the received message
+
+        emit MessageReceived(
+            messageId,
+            sourceChainSelector,
+            sender,
+            message,
+            tokenAmounts[0]
+        );
+    }
+
+	
 
 	/// @notice Validates the message content.
     /// @dev Only allows a single token to be sent, and no data.
