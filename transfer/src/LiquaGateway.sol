@@ -7,10 +7,15 @@ import {Client} from "@chainlink/contracts-ccip/src/v0.8/ccip/libraries/Client.s
 import {CCIPReceiver} from "@chainlink/contracts-ccip/src/v0.8/ccip/applications/CCIPReceiver.sol";
 import {IERC20} from "@chainlink/contracts-ccip/src/v0.8/vendor/openzeppelin-solidity/v4.8.0/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@chainlink/contracts-ccip/src/v0.8/vendor/openzeppelin-solidity/v4.8.0/contracts/token/ERC20/utils/SafeERC20.sol";
-
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {BytesLib} from "./library/BytesLib.sol";
+import {CCIPReceiverUpgradeable} from "./upgradeable/CCIPReceiverUpgradeable.sol";
 
-contract LiquaGateway is CCIPReceiver, OwnerIsCreator {
+
+
+contract LiquaGateway is Initializable, UUPSUpgradeable, CCIPReceiverUpgradeable, OwnableUpgradeable {
     using SafeERC20 for IERC20;
     using BytesLib for bytes;
 
@@ -33,15 +38,24 @@ contract LiquaGateway is CCIPReceiver, OwnerIsCreator {
     uint256 internal i_rate;
     bytes32[] public receivedMessages; // Array to keep track of the IDs of received messages.
 
-	constructor(
-        address _router,
+
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(address _router,
         address _link,
         uint256 _rate
-    ) CCIPReceiver(_router) {
-        i_ccipRouter = IRouterClient(_router);
-        i_link = _link;
-        i_rate = _rate;
+        ) initializer public {
+        __CCIPReceiverUpgradeable_init(_router);
+            i_ccipRouter = IRouterClient(_router);
+            i_link = _link;
+            i_rate = _rate;
     }
+        // __OwnerIsCreator_init();
+
+    function _authorizeUpgrade(address) internal onlyOwner() override {}
+
 
 	// Event emitted when a message is sent to another chain.
     event MessageSent(
