@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.19;
 
 import {IRouterClient} from "@chainlink/contracts-ccip/src/v0.8/ccip/interfaces/IRouterClient.sol";
 import {OwnerIsCreator} from "@chainlink/contracts-ccip/src/v0.8/shared/access/OwnerIsCreator.sol";
@@ -8,8 +8,11 @@ import {CCIPReceiver} from "@chainlink/contracts-ccip/src/v0.8/ccip/applications
 import {IERC20} from "@chainlink/contracts-ccip/src/v0.8/vendor/openzeppelin-solidity/v4.8.0/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@chainlink/contracts-ccip/src/v0.8/vendor/openzeppelin-solidity/v4.8.0/contracts/token/ERC20/utils/SafeERC20.sol";
 
+import {BytesLib} from "./library/BytesLib.sol";
+
 contract LiquaGateway is CCIPReceiver, OwnerIsCreator {
     using SafeERC20 for IERC20;
+    using BytesLib for bytes;
 
     enum FeeTokenType {
         NATIVE,
@@ -28,6 +31,7 @@ contract LiquaGateway is CCIPReceiver, OwnerIsCreator {
     IRouterClient internal i_ccipRouter;
     address internal i_link;
     uint256 internal i_rate;
+    bytes32[] public receivedMessages; // Array to keep track of the IDs of received messages.
 
 	constructor(
         address _router,
@@ -54,8 +58,8 @@ contract LiquaGateway is CCIPReceiver, OwnerIsCreator {
         uint64 indexed sourceChainSelctor, // The chain selector of the source chain.
         address sender, // The address of the sender from the source chain.
         string message, // The message that was received.
-        Client.EVMTokenAmount tokenAmmount, // The token amount that was received.
-        uint256 fees // The fees paid for sending the message.
+        Client.EVMTokenAmount tokenAmmount // The token amount that was received.
+        // uint256 fees // The fees paid for sending the message.
     );
 
 	/// @notice Fallback function to allow the contract to receive Ether.
@@ -80,9 +84,9 @@ contract LiquaGateway is CCIPReceiver, OwnerIsCreator {
         return i_ccipRouter.getFee(destinationChainSelector, message); // + commission
     }
 
-	/// @notice Returns the CCIP router contract.
-    function getRouter() external view returns (IRouterClient) {
-        return i_ccipRouter;
+	// /// @notice Returns the CCIP router contract.
+    function getRouter() public override view returns (address) {
+        return getRouter();
     }
 
     /// @notice Simply forwards the request to the CCIP router and returns the result.
@@ -123,43 +127,70 @@ contract LiquaGateway is CCIPReceiver, OwnerIsCreator {
             // Set the feeToken address
             feeToken: feeTokenType == FeeTokenType.LINK ? i_link : address(0)
         });
-        _validateMessage(message);
+        _validateMessage(evm2AnyMessage);
 
 		// Get the fee required to send the message
         uint256 fees = this.getFee(destinationChainSelector, evm2AnyMessage);
 
-        // Send the message through the router and store the returned message ID
-        messageId = i_ccipRouter.ccipSend(destinationChainSelector, message);
+        if (feeTokenType == FeeTokenType.LINK) {
+            IERC20(i_link).approve(i_router, fees);
+            messageId = IRouterClient(i_router).ccipSend(
+                destinationChainSelector,
+                evm2AnyMessage
+            );
+        } else {
+            // Send the message through the router and store the returned message ID
+            messageId = IRouterClient(i_router).ccipSend{value: fees}(
+                destinationChainSelector,
+                evm2AnyMessage
+            );
+        }
 
         // Emit an event with message details
         emit MessageSent(
             messageId,
             destinationChainSelector,
             receiver,
-            evm2AnyMessage,
+            message,
             tokenAmount,
             fees
         );
     }
 
-	event MessageSent(
-        bytes32 indexed messageId, // The unique ID of the CCIP message.
-        uint64 indexed destinationChainSelector, // The chain selector of the destination chain.
-        address receiver, // The address of the receiver on the destination chain.
-        string message, // The text being sent.
-        address feeToken, // the token address used to pay CCIP fees.
-        uint256 fees // The fees paid for sending the CCIP message.
-    );
+    /// handle a received message
+    function _ccipReceive(
+        Client.Any2EVMMessage memory any2EvmMessage
+    ) internal override {
+        bytes32 messageId = any2EvmMessage.messageId; // fetch the messageId
+        uint64 sourceChainSelector = any2EvmMessage.sourceChainSelector; // fetch the source chain identifier (aka selector)
+        address sender = abi.decode(any2EvmMessage.sender, (address)); // abi-decoding of the sender address
+        Client.EVMTokenAmount[] memory tokenAmounts = any2EvmMessage
+            .destTokenAmounts;
+        string memory message = abi.decode(any2EvmMessage.data, (string)); // abi-decoding of the sent string message
+        receivedMessages.push(messageId);
+
+        //TODO: handle the received message
+
+        emit MessageReceived(
+            messageId,
+            sourceChainSelector,
+            sender,
+            message,
+            tokenAmounts[0]
+        );
+    }
+
+	
 
 	/// @notice Validates the message content.
     /// @dev Only allows a single token to be sent, and no data.
     function _validateMessage(
-        Client.EVM2AnyMessage calldata message
-    ) internal view {
+        Client.EVM2AnyMessage memory message
+    ) internal pure {
         if (
-            message.tokenAmounts.length != 1 ||
-            message.tokenAmounts[0].token != i_token
-        ) revert InvalidToken();
+            message.tokenAmounts.length != 1 
+            // || message.tokenAmounts[0].token != i_token
+        ) revert InvalidToken(message.tokenAmounts[0].token);
         if (message.data.length > 0) revert NoDataAllowed();
 
         if (
@@ -168,9 +199,7 @@ contract LiquaGateway is CCIPReceiver, OwnerIsCreator {
         ) revert GasShouldBeZero();
 
         if (
-            abi
-                .decode(message.extraArgs[4:], (Client.EVMExtraArgsV1))
-                .gasLimit != 0
+            abi.decode(message.extraArgs.slice(4, message.extraArgs.length), (Client.EVMExtraArgsV1)).gasLimit != 0
         ) revert GasShouldBeZero();
     }
 
