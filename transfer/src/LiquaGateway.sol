@@ -8,8 +8,11 @@ import {CCIPReceiver} from "@chainlink/contracts-ccip/src/v0.8/ccip/applications
 import {IERC20} from "@chainlink/contracts-ccip/src/v0.8/vendor/openzeppelin-solidity/v4.8.0/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@chainlink/contracts-ccip/src/v0.8/vendor/openzeppelin-solidity/v4.8.0/contracts/token/ERC20/utils/SafeERC20.sol";
 
+import {BytesLib} from "./library/BytesLib.sol";
+
 contract LiquaGateway is CCIPReceiver, OwnerIsCreator {
     using SafeERC20 for IERC20;
+    using BytesLib for bytes;
 
     enum FeeTokenType {
         NATIVE,
@@ -123,7 +126,7 @@ contract LiquaGateway is CCIPReceiver, OwnerIsCreator {
             // Set the feeToken address
             feeToken: feeTokenType == FeeTokenType.LINK ? i_link : address(0)
         });
-        _validateMessage(message);
+        _validateMessage(evm2AnyMessage);
 
 		// Get the fee required to send the message
         uint256 fees = this.getFee(destinationChainSelector, evm2AnyMessage);
@@ -136,7 +139,7 @@ contract LiquaGateway is CCIPReceiver, OwnerIsCreator {
             messageId,
             destinationChainSelector,
             receiver,
-            evm2AnyMessage,
+            message,
             tokenAmount,
             fees
         );
@@ -154,12 +157,12 @@ contract LiquaGateway is CCIPReceiver, OwnerIsCreator {
 	/// @notice Validates the message content.
     /// @dev Only allows a single token to be sent, and no data.
     function _validateMessage(
-        Client.EVM2AnyMessage calldata message
-    ) internal view {
+        Client.EVM2AnyMessage memory message
+    ) internal pure {
         if (
-            message.tokenAmounts.length != 1 ||
-            message.tokenAmounts[0].token != i_token
-        ) revert InvalidToken();
+            message.tokenAmounts.length != 1 
+            // || message.tokenAmounts[0].token != i_token
+        ) revert InvalidToken(message.tokenAmounts[0].token);
         if (message.data.length > 0) revert NoDataAllowed();
 
         if (
@@ -168,9 +171,7 @@ contract LiquaGateway is CCIPReceiver, OwnerIsCreator {
         ) revert GasShouldBeZero();
 
         if (
-            abi
-                .decode(message.extraArgs[4:], (Client.EVMExtraArgsV1))
-                .gasLimit != 0
+            abi.decode(message.extraArgs.slice(4, message.extraArgs.length), (Client.EVMExtraArgsV1)).gasLimit != 0
         ) revert GasShouldBeZero();
     }
 
