@@ -131,8 +131,19 @@ contract LiquaGateway is CCIPReceiver, OwnerIsCreator {
 		// Get the fee required to send the message
         uint256 fees = this.getFee(destinationChainSelector, evm2AnyMessage);
 
+        if (feeTokenType == FeeTokenType.LINK) {
+            IERC20(i_link).approve(i_router, fees);
+            messageId = IRouterClient(i_router).ccipSend(
+                destinationChainSelector,
+                evm2AnyMessage
+            );
+        } else {
         // Send the message through the router and store the returned message ID
-        messageId = i_ccipRouter.ccipSend(destinationChainSelector, message);
+            messageId = IRouterClient(i_router).ccipSend{value: fees}(
+                destinationChainSelector,
+                evm2AnyMessage
+            );
+        }
 
         // Emit an event with message details
         emit MessageSent(
