@@ -35,7 +35,7 @@ contract LiquaGateway is Initializable, UUPSUpgradeable, CCIPReceiverUpgradeable
 	/// @notice The CCIP router contract
     IRouterClient internal i_ccipRouter;
     address internal i_link;
-    uint256 internal i_rate;
+    uint256 public commissionFee;
     bytes32[] public receivedMessages; // Array to keep track of the IDs of received messages.
 
 
@@ -43,16 +43,15 @@ contract LiquaGateway is Initializable, UUPSUpgradeable, CCIPReceiverUpgradeable
         _disableInitializers();
     }
 
-    function initialize(address _router,
-        address _link,
-        uint256 _rate
+    function initialize(
+        address _router,
+        address _link
         ) initializer public {
         __CCIPReceiverUpgradeable_init(_router);
             i_ccipRouter = IRouterClient(_router);
             i_link = _link;
-            i_rate = _rate;
+            commissionFee = 2000;
     }
-        // __OwnerIsCreator_init();
 
     function _authorizeUpgrade(address) internal onlyOwner() override {}
 
@@ -73,7 +72,6 @@ contract LiquaGateway is Initializable, UUPSUpgradeable, CCIPReceiverUpgradeable
         address sender, // The address of the sender from the source chain.
         string message, // The message that was received.
         Client.EVMTokenAmount tokenAmmount // The token amount that was received.
-        // uint256 fees // The fees paid for sending the message.
     );
 
 	/// @notice Fallback function to allow the contract to receive Ether.
@@ -94,8 +92,11 @@ contract LiquaGateway is Initializable, UUPSUpgradeable, CCIPReceiverUpgradeable
         uint64 destinationChainSelector,
         Client.EVM2AnyMessage calldata message
     ) external view returns (uint256 fee) {
-        // TODO: update the function to include the calculation of commission
-        return i_ccipRouter.getFee(destinationChainSelector, message); // + commission
+        return i_ccipRouter.getFee(destinationChainSelector, message) * commissionFee / 1000 ; // + commission
+    }
+
+    function setCommissionFee(uint256 amount) external onlyOwner {
+        commissionFee = amount;
     }
 
 	// /// @notice Returns the CCIP router contract.
