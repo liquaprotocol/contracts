@@ -7,6 +7,8 @@ remappings = [
     '@chainlink/contracts-ccip/=node_modules/@chainlink/contracts-ccip',
 ]
 solc = '0.8.20'
+build_info = true
+extra_output = ["storageLayout"]
 
 [rpc_endpoints]
 ethereumSepolia = "${ETHEREUM_SEPOLIA_RPC_URL}"

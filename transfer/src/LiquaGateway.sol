@@ -39,9 +39,9 @@ contract LiquaGateway is Initializable, UUPSUpgradeable, CCIPReceiverUpgradeable
     bytes32[] public receivedMessages; // Array to keep track of the IDs of received messages.
 
 
-    constructor() {
-        _disableInitializers();
-    }
+    // constructor() {
+    //     _disableInitializers();
+    // }
 
     function initialize(
         address _router,
