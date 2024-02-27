@@ -24,12 +24,6 @@ contract DepolyScript is Script, Helper {
 
         (address router, address linkToken,,) = getConfigFromNetwork(network);
 
-        // console2.log("Deploying LiquaGateway to", vm.toString(router));
-
-
-
-
-
         address proxy = Upgrades.deployUUPSProxy(
             "LiquaGateway.sol",
             abi.encodeCall(LiquaGateway.initialize, (

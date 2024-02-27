@@ -16,10 +16,10 @@ contract Faucet is Script, Helper {
 
         (address ccipBnm, address ccipLnm) = getDummyTokensFromNetwork(network);
 
-        ICCIPToken(ccipBnm).drip(senderAddress);
 
         if (network == SupportedNetworks.ETHEREUM_SEPOLIA) {
             ICCIPToken(ccipLnm).drip(senderAddress);
+            ICCIPToken(ccipBnm).drip(senderAddress);
         }
 
         vm.stopBroadcast();
