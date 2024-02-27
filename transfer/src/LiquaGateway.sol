@@ -13,9 +13,12 @@ import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Own
 import {BytesLib} from "./library/BytesLib.sol";
 import {CCIPReceiverUpgradeable} from "./upgradeable/CCIPReceiverUpgradeable.sol";
 
-
-
-contract LiquaGateway is Initializable, UUPSUpgradeable, CCIPReceiverUpgradeable, OwnableUpgradeable {
+contract LiquaGateway is
+    Initializable,
+    UUPSUpgradeable,
+    CCIPReceiverUpgradeable,
+    OwnableUpgradeable
+{
     using SafeERC20 for IERC20;
     using BytesLib for bytes;
 
@@ -24,7 +27,7 @@ contract LiquaGateway is Initializable, UUPSUpgradeable, CCIPReceiverUpgradeable
         LINK
     }
 
- 	// Custom errors to provide more descriptive revert messages.
+    // Custom errors to provide more descriptive revert messages.
     error InvalidToken(address tokenAddr);
     error NoDataAllowed();
     error GasShouldBeZero();
@@ -32,31 +35,26 @@ contract LiquaGateway is Initializable, UUPSUpgradeable, CCIPReceiverUpgradeable
     error FailedToWithdrawEth(address owner, address target, uint256 value); // Used when the withdrawal of Ether fails.
     error NotEnoughFees(uint256 paidFees, uint256 calculatedFees); // Used to make sure user paid enough fees
 
-	/// @notice The CCIP router contract
+    /// @notice The CCIP router contract
     IRouterClient internal i_ccipRouter;
     address internal i_link;
     uint256 public commissionFee;
     bytes32[] public receivedMessages; // Array to keep track of the IDs of received messages.
 
-
     // constructor() {
     //     _disableInitializers();
     // }
 
-    function initialize(
-        address _router,
-        address _link
-        ) initializer public {
+    function initialize(address _router, address _link) public initializer {
         __CCIPReceiverUpgradeable_init(_router);
-            i_ccipRouter = IRouterClient(_router);
-            i_link = _link;
-            commissionFee = 2000;
+        i_ccipRouter = IRouterClient(_router);
+        i_link = _link;
+        commissionFee = 2000;
     }
 
-    function _authorizeUpgrade(address) internal onlyOwner() override {}
+    function _authorizeUpgrade(address) internal override onlyOwner {}
 
-
-	// Event emitted when a message is sent to another chain.
+    // Event emitted when a message is sent to another chain.
     event MessageSent(
         bytes32 indexed messageId, // The unique ID of the CCIP message.
         uint64 indexed destinationChainSelector, // The chain selector of the destination chain.
@@ -74,7 +72,7 @@ contract LiquaGateway is Initializable, UUPSUpgradeable, CCIPReceiverUpgradeable
         Client.EVMTokenAmount tokenAmmount // The token amount that was received.
     );
 
-	/// @notice Fallback function to allow the contract to receive Ether.
+    /// @notice Fallback function to allow the contract to receive Ether.
     /// @dev This function has no function body, making it a default function for receiving Ether.
     /// It is automatically called when Ether is sent to the contract without any data.
     receive() external payable {}
@@ -92,30 +90,32 @@ contract LiquaGateway is Initializable, UUPSUpgradeable, CCIPReceiverUpgradeable
         uint64 destinationChainSelector,
         Client.EVM2AnyMessage calldata message
     ) external view returns (uint256 fee) {
-        return i_ccipRouter.getFee(destinationChainSelector, message) * commissionFee / 1000 ; // + commission
+        return
+            (i_ccipRouter.getFee(destinationChainSelector, message) *
+                commissionFee) / 1000; // + commission
     }
 
     function setCommissionFee(uint256 amount) external onlyOwner {
         commissionFee = amount;
     }
 
-	// /// @notice Returns the CCIP router contract.
-    function getRouter() public override view returns (address) {
+    // /// @notice Returns the CCIP router contract.
+    function getRouter() public view override returns (address) {
         return getRouter();
     }
 
     /// @notice Simply forwards the request to the CCIP router and returns the result.
     /// @param destinationChainSelector The destination chainSelector
     /// @param receiver The address of the recipient on the destination blockchain.
-    /// @param message The string text to be sent.
+ // /// @param message The string text to be sent.
     /// @param token The address of the token to transfer.
     /// @param amount The amount of the token to transfer.
     /// @return messageId The ID of the message that was sent.
     /// @dev Reverts with appropriate reason upon invalid message.
-	function send(
+    function send(
         uint64 destinationChainSelector,
         address receiver,
-        string calldata message,
+        string calldata,
         address token,
         uint256 amount,
         FeeTokenType feeTokenType
@@ -133,7 +133,7 @@ contract LiquaGateway is Initializable, UUPSUpgradeable, CCIPReceiverUpgradeable
         // for sending a cross-chain message
         Client.EVM2AnyMessage memory evm2AnyMessage = Client.EVM2AnyMessage({
             receiver: abi.encode(receiver),
-            data: abi.encode(message),
+            data: abi.encode(""),
             tokenAmounts: tokenAmounts,
             extraArgs: Client._argsToBytes(
                 // Additional arguments, setting gas limit
@@ -144,7 +144,9 @@ contract LiquaGateway is Initializable, UUPSUpgradeable, CCIPReceiverUpgradeable
         });
         _validateMessage(evm2AnyMessage);
 
-		// Get the fee required to send the message
+        IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
+        IERC20(token).approve(i_router, amount);
+        // Get the fee required to send the message
         uint256 fees = this.getFee(destinationChainSelector, evm2AnyMessage);
 
         if (feeTokenType == FeeTokenType.LINK) {
@@ -166,7 +168,7 @@ contract LiquaGateway is Initializable, UUPSUpgradeable, CCIPReceiverUpgradeable
             messageId,
             destinationChainSelector,
             receiver,
-            message,
+            "",
             tokenAmount,
             fees
         );
@@ -195,30 +197,28 @@ contract LiquaGateway is Initializable, UUPSUpgradeable, CCIPReceiverUpgradeable
         );
     }
 
-	
-
-	/// @notice Validates the message content.
+    /// @notice Validates the message content.
     /// @dev Only allows a single token to be sent, and no data.
     function _validateMessage(
         Client.EVM2AnyMessage memory message
     ) internal pure {
         if (
-            message.tokenAmounts.length != 1 
+            message.tokenAmounts.length != 1
             // || message.tokenAmounts[0].token != i_token
         ) revert InvalidToken(message.tokenAmounts[0].token);
-        if (message.data.length > 0) revert NoDataAllowed();
+        // if (message.data.length > 0) revert NoDataAllowed();
 
-        if (
-            message.extraArgs.length == 0 ||
-            bytes4(message.extraArgs) != Client.EVM_EXTRA_ARGS_V1_TAG
-        ) revert GasShouldBeZero();
+        // if (
+        //     message.extraArgs.length == 0 ||
+        //     bytes4(message.extraArgs) != Client.EVM_EXTRA_ARGS_V1_TAG
+        // ) revert GasShouldBeZero();
 
-        if (
-            abi.decode(message.extraArgs.slice(4, message.extraArgs.length), (Client.EVMExtraArgsV1)).gasLimit != 0
-        ) revert GasShouldBeZero();
+        // if (
+        //     abi.decode(message.extraArgs.slice(4, message.extraArgs.length), (Client.EVMExtraArgsV1)).gasLimit != 0
+        // ) revert GasShouldBeZero();
     }
 
-	/// @notice Allows the contract owner to withdraw the entire balance of Ether from the contract.
+    /// @notice Allows the contract owner to withdraw the entire balance of Ether from the contract.
     /// @dev This function reverts if there are no funds to withdraw or if the transfer fails.
     /// It should only be callable by the owner of the contract.
     /// @param beneficiary The address to which the Ether should be sent.
@@ -236,7 +236,7 @@ contract LiquaGateway is Initializable, UUPSUpgradeable, CCIPReceiverUpgradeable
         if (!sent) revert FailedToWithdrawEth(msg.sender, beneficiary, amount);
     }
 
-	/// @notice Allows the owner of the contract to withdraw all tokens of a specific ERC20 token.
+    /// @notice Allows the owner of the contract to withdraw all tokens of a specific ERC20 token.
     /// @dev This function reverts with a 'NothingToWithdraw' error if there are no tokens to withdraw.
     /// @param beneficiary The address to which the tokens will be sent.
     /// @param token The contract address of the ERC20 token to be withdrawn.
@@ -252,5 +252,4 @@ contract LiquaGateway is Initializable, UUPSUpgradeable, CCIPReceiverUpgradeable
 
         IERC20(token).safeTransfer(beneficiary, amount);
     }
-
- }
+}
