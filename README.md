@@ -1,6 +1,6 @@
-![liqua.png](./img/liqua.png)
+![liqua.png](https://github.com/liquaprotocol/contracts/tree/main/img/liqua.png)
 
-
+<p align="center">
 <a href="https://www.liqua.io/">
    <img src='https://img.shields.io/github/languages/code-size/liquaprotocol/contracts'>
   </a>
@@ -13,6 +13,8 @@
     <a href="https://twitter.com/liqua_protocol">
     <img src='https://img.shields.io/twitter/follow/liqua_protocol'>
   </a>
+</p>
+
 
 # Liqua
 
@@ -56,13 +58,24 @@ forge build
 ```
 
 ## 📃 Deployments
+<p align="center">
 
-$${\color{red}Coming soon!!!!}$$
-$${\color{blue}Coming soon!!!!}$$
+<text style="color:#FF6666">_**Coming Soon!!!**_</text>
 
-$${\color{green}Coming soon!!!!}$$
+<text style="color:#FFB266">_**Coming Soon!!!**_</text>
 
-$${\color{pink}Coming soon!!!!}$$
+<text style="color:#FFFF66">_**Coming Soon!!!**_</text>
+
+<text style="color:#66FF66">_**Coming Soon!!!**_</text>
+
+<text style="color:#66FFFF">_**Coming Soon!!!**_</text>
+
+<text style="color:#6666FF">_**Coming Soon!!!**_</text>
+
+
+<text style="color:#FF66FF">_**Coming Soon!!!**_</text>
+
+</p>
 
 ## 📜 License
 
