@@ -1,4 +1,4 @@
-![liqua.png](https://github.com/liquaprotocol/contracts/tree/main/img/liqua.png)
+![liqua.png](https://github.com/liquaprotocol/contracts/blob/main/img/liqua.png)
 
 <p align="center">
 <a href="https://www.liqua.io/">
