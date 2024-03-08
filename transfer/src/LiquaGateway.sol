@@ -118,6 +118,7 @@ contract LiquaGateway is
         string calldata,
         address token,
         uint256 amount,
+        uint256 gasLimit,
         FeeTokenType feeTokenType
     ) external payable returns (bytes32 messageId) {
         // Set the token amounts
@@ -133,11 +134,11 @@ contract LiquaGateway is
         // for sending a cross-chain message
         Client.EVM2AnyMessage memory evm2AnyMessage = Client.EVM2AnyMessage({
             receiver: abi.encode(receiver),
-            data: abi.encode(""),
+            data: new bytes(0),
             tokenAmounts: tokenAmounts,
             extraArgs: Client._argsToBytes(
                 // Additional arguments, setting gas limit
-                Client.EVMExtraArgsV1({gasLimit: 200_000})
+                Client.EVMExtraArgsV1({gasLimit: gasLimit})
             ),
             // Set the feeToken address
             feeToken: feeTokenType == FeeTokenType.LINK ? i_link : address(0)
