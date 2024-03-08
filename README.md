@@ -58,9 +58,9 @@ forge build
 ```
 
 ## 📃 Deployments
-<p align="center">
 
-<text style="color:#FF6666">_**Coming Soon!!!**_</text>
+
+<text style="color:#FF6666">_**ethereum Sepolia: 0x28CBC3A6bAd17F2B2CAeB552F913BB9E737D897B**_</text>
 
 <text style="color:#FFB266">_**Coming Soon!!!**_</text>
 
@@ -75,7 +75,6 @@ forge build
 
 <text style="color:#FF66FF">_**Coming Soon!!!**_</text>
 
-</p>
 
 ## 📜 License
 
