@@ -89,6 +89,7 @@ contract GateWayTest is Test {
             "",
             address(weth),
             1 ether,
+            0,
             LiquaGateway.FeeTokenType.NATIVE
         );
 

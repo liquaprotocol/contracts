@@ -20,19 +20,10 @@ contract SendMessage is Script, Helper {
         address receiver = vm.addr(deployerPrivateKey);
 
 
-        address gateway = 0xc2Db166F613645572BC0de32695F3C5D02a7c175;
+        address gateway = 0xC8940d11a671beed2b7bD09F3256A40148a14812;
 
         (, , , uint64 destinationChainId) = getConfigFromNetwork(destination);
         (address ccipBnM,) = getDummyTokensFromNetwork(SupportedNetworks.ETHEREUM_SEPOLIA);
-
-
-
-        // uint64 destinationChainSelector,
-        // address receiver,
-        // string calldata message,
-        // address token,
-        // uint256 amount,
-        // FeeTokenType feeTokenType
 
         Client.EVMTokenAmount[]
             memory tokenAmounts = new Client.EVMTokenAmount[](1);
@@ -47,7 +38,7 @@ contract SendMessage is Script, Helper {
             data: abi.encode(""),
             tokenAmounts: tokenAmounts,
             extraArgs: Client._argsToBytes(
-                Client.EVMExtraArgsV1({gasLimit: 200_000})
+                Client.EVMExtraArgsV1({gasLimit: 0})
             ),
             feeToken: address(0)
         });
@@ -57,7 +48,7 @@ contract SendMessage is Script, Helper {
             evm2AnyMessage
         );
 
-        // IERC20(ccipBnM).approve(gateway, 1 ether);
+        IERC20(ccipBnM).approve(gateway, 1 ether);
 
 
         bytes32 messageId = LiquaGateway(payable(gateway)).send{
@@ -68,6 +59,7 @@ contract SendMessage is Script, Helper {
             "",
             ccipBnM,
             1 ether,
+            0,
             LiquaGateway.FeeTokenType.NATIVE
         );
 
