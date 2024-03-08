@@ -59,21 +59,13 @@ forge build
 
 ## 📃 Deployments
 
-
-<text style="color:#FF6666">_**ethereum Sepolia: 0x28CBC3A6bAd17F2B2CAeB552F913BB9E737D897B**_</text>
-
-<text style="color:#FFB266">_**Coming Soon!!!**_</text>
-
-<text style="color:#FFFF66">_**Coming Soon!!!**_</text>
-
-<text style="color:#66FF66">_**Coming Soon!!!**_</text>
-
-<text style="color:#66FFFF">_**Coming Soon!!!**_</text>
-
-<text style="color:#6666FF">_**Coming Soon!!!**_</text>
-
-
-<text style="color:#FF66FF">_**Coming Soon!!!**_</text>
+- ethereum Sepolia: 0x28CBC3A6bAd17F2B2CAeB552F913BB9E737D897B
+- optimismSepolia: 0xb9f56e3659f927C54220a5E6Ded46162dD826A08
+- avalancheFuji:0xb9f56e3659f927C54220a5E6Ded46162dD826A08
+- arbitrumSepolia:0xb9f56e3659f927C54220a5E6Ded46162dD826A08
+- Polygon Mumbai: 0xb9f56e3659f927C54220a5E6Ded46162dD826A08
+- bnbChainTestnet:0xb9f56e3659f927C54220a5E6Ded46162dD826A08
+- baseSepolia:0xb9f56e3659f927C54220a5E6Ded46162dD826A08
 
 
 ## 📜 License
