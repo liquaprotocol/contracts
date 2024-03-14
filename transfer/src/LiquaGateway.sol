@@ -38,8 +38,14 @@ contract LiquaGateway is
     /// @notice The CCIP router contract
     IRouterClient internal i_ccipRouter;
     address internal i_link;
-    uint256 public commissionFee;
     bytes32[] public receivedMessages; // Array to keep track of the IDs of received messages.
+
+    struct TokenFeeConfig {
+        uint256 fee; // 0.0001% = 1
+        uint256 minAmount;
+        uint256 maxAmount;
+    }
+    mapping (address => TokenFeeConfig) public tokenFeeConfigs;
 
     // constructor() {
     //     _disableInitializers();
@@ -49,7 +55,6 @@ contract LiquaGateway is
         __CCIPReceiverUpgradeable_init(_router);
         i_ccipRouter = IRouterClient(_router);
         i_link = _link;
-        commissionFee = 2000;
     }
 
     function _authorizeUpgrade(address) internal override onlyOwner {}
@@ -59,7 +64,6 @@ contract LiquaGateway is
         bytes32 indexed messageId, // The unique ID of the CCIP message.
         uint64 indexed destinationChainSelector, // The chain selector of the destination chain.
         address receiver, // The address of the receiver on the destination chain.
-        string message, // The text being sent.
         Client.EVMTokenAmount tokenAmount, // The token amount that was sent.
         uint256 fees // The fees paid for sending the CCIP message.
     );
@@ -90,13 +94,22 @@ contract LiquaGateway is
         uint64 destinationChainSelector,
         Client.EVM2AnyMessage calldata message
     ) external view returns (uint256 fee) {
-        return
-            (i_ccipRouter.getFee(destinationChainSelector, message) *
-                commissionFee) / 1000; // + commission
+        return i_ccipRouter.getFee(destinationChainSelector, message);
     }
 
-    function setCommissionFee(uint256 amount) external onlyOwner {
-        commissionFee = amount;
+    function getCommissionFee(
+        address token,
+        uint256 amount
+    ) public view returns (uint256 commissionFee) {
+        TokenFeeConfig memory tokenFeeConfig = tokenFeeConfigs[token];
+
+        commissionFee = (amount * tokenFeeConfig.fee) / 1e6;
+
+        if (commissionFee < tokenFeeConfig.minAmount) {
+            commissionFee = tokenFeeConfig.minAmount;
+        } else if (commissionFee > tokenFeeConfig.maxAmount) {
+            commissionFee = tokenFeeConfig.maxAmount;
+        }
     }
 
     // /// @notice Returns the CCIP router contract.
@@ -115,13 +128,15 @@ contract LiquaGateway is
     function send(
         uint64 destinationChainSelector,
         address receiver,
-        string calldata,
         address token,
         uint256 amount,
         uint256 gasLimit,
         FeeTokenType feeTokenType
     ) external payable returns (bytes32 messageId) {
-        // Set the token amounts
+        // calculate the fees
+        amount = amount - getCommissionFee(token, amount);
+
+
         Client.EVMTokenAmount[]
             memory tokenAmounts = new Client.EVMTokenAmount[](1);
         Client.EVMTokenAmount memory tokenAmount = Client.EVMTokenAmount({
@@ -169,7 +184,6 @@ contract LiquaGateway is
             messageId,
             destinationChainSelector,
             receiver,
-            "",
             tokenAmount,
             fees
         );
@@ -205,18 +219,7 @@ contract LiquaGateway is
     ) internal pure {
         if (
             message.tokenAmounts.length != 1
-            // || message.tokenAmounts[0].token != i_token
         ) revert InvalidToken(message.tokenAmounts[0].token);
-        // if (message.data.length > 0) revert NoDataAllowed();
-
-        // if (
-        //     message.extraArgs.length == 0 ||
-        //     bytes4(message.extraArgs) != Client.EVM_EXTRA_ARGS_V1_TAG
-        // ) revert GasShouldBeZero();
-
-        // if (
-        //     abi.decode(message.extraArgs.slice(4, message.extraArgs.length), (Client.EVMExtraArgsV1)).gasLimit != 0
-        // ) revert GasShouldBeZero();
     }
 
     /// @notice Allows the contract owner to withdraw the entire balance of Ether from the contract.
@@ -252,5 +255,17 @@ contract LiquaGateway is
         if (amount == 0) revert NothingToWithdraw();
 
         IERC20(token).safeTransfer(beneficiary, amount);
+    }
+    function setTokenFeeConfig(
+        address token,
+        uint256 fee,
+        uint256 minAmount,
+        uint256 maxAmount
+    ) public onlyOwner {
+        tokenFeeConfigs[token] = TokenFeeConfig({
+            fee: fee,
+            minAmount: minAmount,
+            maxAmount: maxAmount
+        });
     }
 }

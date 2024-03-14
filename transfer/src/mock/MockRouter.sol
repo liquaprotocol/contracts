@@ -66,16 +66,16 @@ contract MockCCIPRouter is IRouter, IRouterClient {
     if (decodedReceiver > type(uint160).max || decodedReceiver < 10) revert InvalidAddress(message.receiver);
 
     address receiver = address(uint160(decodedReceiver));
-    uint256 gasLimit = _fromBytes(message.extraArgs).gasLimit;
+    // uint256 gasLimit = _fromBytes(message.extraArgs).gasLimit;
     bytes32 mockMsgId = keccak256(abi.encode(message));
 
-    Client.Any2EVMMessage memory executableMsg = Client.Any2EVMMessage({
-      messageId: mockMsgId,
-      sourceChainSelector: 16015286601757825753, // Sepolia
-      sender: abi.encode(msg.sender),
-      data: message.data,
-      destTokenAmounts: message.tokenAmounts
-    });
+    // Client.Any2EVMMessage memory executableMsg = Client.Any2EVMMessage({
+    //   messageId: mockMsgId,
+    //   sourceChainSelector: 16015286601757825753, // Sepolia
+    //   sender: abi.encode(msg.sender),
+    //   data: message.data,
+    //   destTokenAmounts: message.tokenAmounts
+    // });
 
     for (uint256 i = 0; i < message.tokenAmounts.length; ++i) {
       IERC20(message.tokenAmounts[i].token).safeTransferFrom(msg.sender, receiver, message.tokenAmounts[i].amount);
