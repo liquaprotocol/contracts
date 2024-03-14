@@ -59,7 +59,7 @@ forge build
 
 ## 📃 Deployments
 
-- ethereum Sepolia: 0x28CBC3A6bAd17F2B2CAeB552F913BB9E737D897B
+- ethereum Sepolia: 0xa40F47bF1D7061E4c46a4502a5507B4350bbb808
 - optimismSepolia: 0xb9f56e3659f927C54220a5E6Ded46162dD826A08
 - avalancheFuji:0xb9f56e3659f927C54220a5E6Ded46162dD826A08
 - arbitrumSepolia:0xb9f56e3659f927C54220a5E6Ded46162dD826A08
