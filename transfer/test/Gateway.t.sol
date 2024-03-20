@@ -86,7 +86,6 @@ contract GateWayTest is Test {
         }(
             destinationChainId,
             owner,
-            "",
             address(weth),
             1 ether,
             0,

@@ -56,7 +56,6 @@ contract SendMessage is Script, Helper {
         }(
             destinationChainId,
             receiver,
-            "",
             ccipBnM,
             1 ether,
             0,
