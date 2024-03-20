@@ -114,7 +114,7 @@ contract LiquaGateway is
 
         if (commissionFee < tokenFeeConfig.minAmount) {
             commissionFee = tokenFeeConfig.minAmount;
-        } else if (commissionFee > tokenFeeConfig.maxAmount) {
+        } else if (tokenFeeConfig.maxAmount > 0 && commissionFee > tokenFeeConfig.maxAmount) {
             commissionFee = tokenFeeConfig.maxAmount;
         }
     }
