@@ -24,15 +24,15 @@ contract SendMessage is Script, Helper {
 
         address receiver = owner;
 
-        (address router, , ,) = getConfigFromNetwork(destination);
+        (, address liqua,,,) = getConfigFromNetwork(destination);
         (address ccipBnM, address ccipLnM) = getDummyTokensFromNetwork(destination);
 
 
-        IERC20(ccipBnM).approve(router, 1000000000000 ether);
-        IERC20(ccipLnM).approve(router, 1000000000000 ether);
+        IERC20(ccipBnM).approve(liqua, 1000000000000 ether);
+        IERC20(ccipLnM).approve(liqua, 1000000000000 ether);
 
-        console.log("ccipBnM allowance of:", IERC20(ccipBnM).allowance(address(receiver), router));
-        console.log("ccipLnM allowance of:", IERC20(ccipLnM).allowance(address(receiver), router));
+        console.log("ccipBnM allowance of:", IERC20(ccipBnM).allowance(address(receiver), liqua));
+        console.log("ccipLnM allowance of:", IERC20(ccipLnM).allowance(address(receiver), liqua));
 
 
         // Client.EVMTokenAmount[]

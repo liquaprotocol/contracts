@@ -120,6 +120,15 @@ contract Helper {
     address constant usdcBaseSepolia =
         0x036CbD53842c5426634e7929541eC2318f3dCF7e;
 
+    // Liqua Gateway addresses
+    address constant liquaEthereumSepolia =
+        0x07819e7A0287E4b5ae26B2D0AE9780e234700Cc1;
+    address constant liquaPolygonMumbai =
+        0x52937B6041D26cD25Fc2d1A56f579F34c10B23eE;
+    address constant liquaBnbTestnet =
+        0xcD978bF791342b64Bc964DA8EDF6BC94b31D985D;
+        
+
     constructor() {
         networks[SupportedNetworks.ETHEREUM_SEPOLIA] = "Ethereum Sepolia";
         networks[SupportedNetworks.OPTIMISM_SEPOLIA] = "Optimism Sepolia";
@@ -157,6 +166,7 @@ contract Helper {
         pure
         returns (
             address router,
+            address liqua,
             address linkToken,
             address wrappedNative,
             uint64 chainId
@@ -165,6 +175,7 @@ contract Helper {
         if (network == SupportedNetworks.ETHEREUM_SEPOLIA) {
             return (
                 routerEthereumSepolia,
+                liquaEthereumSepolia,
                 linkEthereumSepolia,
                 wethEthereumSepolia,
                 chainIdEthereumSepolia
@@ -172,6 +183,7 @@ contract Helper {
         } else if (network == SupportedNetworks.OPTIMISM_SEPOLIA) {
             return (
                 routerOptimismSepolia,
+                0x0000000000000000000000000000000000000000,
                 linkOptimismSepolia,
                 wethOptimismSepolia,
                 chainIdOptimismSepolia
@@ -179,6 +191,7 @@ contract Helper {
         } else if (network == SupportedNetworks.ARBITRUM_SEPOLIA) {
             return (
                 routerArbitrumSepolia,
+                0x0000000000000000000000000000000000000000,
                 linkArbitrumSepolia,
                 wethArbitrumSepolia,
                 chainIdArbitrumSepolia
@@ -186,6 +199,7 @@ contract Helper {
         } else if (network == SupportedNetworks.AVALANCHE_FUJI) {
             return (
                 routerAvalancheFuji,
+                0x0000000000000000000000000000000000000000,
                 linkAvalancheFuji,
                 wavaxAvalancheFuji,
                 chainIdAvalancheFuji
@@ -193,6 +207,7 @@ contract Helper {
         } else if (network == SupportedNetworks.POLYGON_MUMBAI) {
             return (
                 routerPolygonMumbai,
+                liquaPolygonMumbai,
                 linkPolygonMumbai,
                 wmaticPolygonMumbai,
                 chainIdPolygonMumbai
@@ -200,6 +215,7 @@ contract Helper {
         } else if (network == SupportedNetworks.BNB_CHAIN_TESTNET) {
             return (
                 routerBnbChainTestnet,
+                liquaBnbTestnet,
                 linkBnbChainTestnet,
                 wbnbBnbChainTestnet,
                 chainIdBnbChainTestnet
@@ -207,6 +223,7 @@ contract Helper {
         } else if (network == SupportedNetworks.BASE_SEPOLIA) {
             return (
                 routerBaseSepolia,
+                0x0000000000000000000000000000000000000000,
                 linkBaseSepolia,
                 wethBaseSepolia,
                 chainIdBaseSepolia
