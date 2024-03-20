@@ -42,7 +42,7 @@ contract LiquaGateway is
     bytes32[] public receivedMessages; // Array to keep track of the IDs of received messages.
 
     struct TokenFeeConfig {
-        uint256 fee; // 0.0001% = 1
+        uint256 fee; // 0.0001% = 1, 0.05% = 500, 1% = 10000
         uint256 minAmount;
         uint256 maxAmount;
     }
@@ -143,14 +143,13 @@ contract LiquaGateway is
         FeeTokenType feeTokenType
     ) external payable returns (bytes32 messageId) {
         // calculate the fees
-        amount = amount - getCommissionFee(token, amount);
-
+        uint commissionFee = getCommissionFee(token, amount);
 
         Client.EVMTokenAmount[]
             memory tokenAmounts = new Client.EVMTokenAmount[](1);
         Client.EVMTokenAmount memory tokenAmount = Client.EVMTokenAmount({
             token: token,
-            amount: amount
+            amount: amount - commissionFee
         });
         tokenAmounts[0] = tokenAmount;
 
