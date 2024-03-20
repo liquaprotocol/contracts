@@ -10,6 +10,7 @@ import {SafeERC20} from "@chainlink/contracts-ccip/src/v0.8/vendor/openzeppelin-
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {BytesLib} from "./library/BytesLib.sol";
 import {CCIPReceiverUpgradeable} from "./upgradeable/CCIPReceiverUpgradeable.sol";
 
@@ -17,7 +18,7 @@ contract LiquaGateway is
     Initializable,
     UUPSUpgradeable,
     CCIPReceiverUpgradeable,
-    OwnableUpgradeable
+    AccessControlUpgradeable
 {
     using SafeERC20 for IERC20;
     using BytesLib for bytes;
@@ -36,16 +37,17 @@ contract LiquaGateway is
     error NotEnoughFees(uint256 paidFees, uint256 calculatedFees); // Used to make sure user paid enough fees
 
     /// @notice The CCIP router contract
-    IRouterClient internal i_ccipRouter;
     address internal i_link;
     bytes32[] public receivedMessages; // Array to keep track of the IDs of received messages.
 
     struct TokenFeeConfig {
-        uint256 fee; // 0.0001% = 1
+        uint256 fee; // 0.0001% = 1, 0.05% = 500, 1% = 10000
         uint256 minAmount;
         uint256 maxAmount;
     }
     mapping (address => TokenFeeConfig) public tokenFeeConfigs;
+
+    bytes32 public constant TREASURY_ROLE = keccak256("TREASURY_ROLE");
 
     // constructor() {
     //     _disableInitializers();
@@ -53,11 +55,16 @@ contract LiquaGateway is
 
     function initialize(address _router, address _link) public initializer {
         __CCIPReceiverUpgradeable_init(_router);
-        i_ccipRouter = IRouterClient(_router);
+
+        __AccessControl_init();
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(TREASURY_ROLE, msg.sender);
+        _setRoleAdmin(TREASURY_ROLE, DEFAULT_ADMIN_ROLE);
+
         i_link = _link;
     }
 
-    function _authorizeUpgrade(address) internal override onlyOwner {}
+    function _authorizeUpgrade(address) internal override onlyRole(DEFAULT_ADMIN_ROLE) {}
 
     // Event emitted when a message is sent to another chain.
     event MessageSent(
@@ -84,7 +91,7 @@ contract LiquaGateway is
     function getSupportedTokens(
         uint64 chainSelector
     ) external view returns (address[] memory tokens) {
-        tokens = IRouterClient(i_ccipRouter).getSupportedTokens(chainSelector);
+        tokens = IRouterClient(i_router).getSupportedTokens(chainSelector);
     }
 
     /// @param destinationChainSelector The destination chainSelector
@@ -94,7 +101,7 @@ contract LiquaGateway is
         uint64 destinationChainSelector,
         Client.EVM2AnyMessage calldata message
     ) external view returns (uint256 fee) {
-        return i_ccipRouter.getFee(destinationChainSelector, message);
+        return IRouterClient(i_router).getFee(destinationChainSelector, message);
     }
 
     function getCommissionFee(
@@ -107,20 +114,19 @@ contract LiquaGateway is
 
         if (commissionFee < tokenFeeConfig.minAmount) {
             commissionFee = tokenFeeConfig.minAmount;
-        } else if (commissionFee > tokenFeeConfig.maxAmount) {
+        } else if (tokenFeeConfig.maxAmount > 0 && commissionFee > tokenFeeConfig.maxAmount) {
             commissionFee = tokenFeeConfig.maxAmount;
         }
     }
 
     // /// @notice Returns the CCIP router contract.
     function getRouter() public view override returns (address) {
-        return getRouter();
+        return super.getRouter();
     }
 
     /// @notice Simply forwards the request to the CCIP router and returns the result.
     /// @param destinationChainSelector The destination chainSelector
     /// @param receiver The address of the recipient on the destination blockchain.
- // /// @param message The string text to be sent.
     /// @param token The address of the token to transfer.
     /// @param amount The amount of the token to transfer.
     /// @return messageId The ID of the message that was sent.
@@ -134,14 +140,13 @@ contract LiquaGateway is
         FeeTokenType feeTokenType
     ) external payable returns (bytes32 messageId) {
         // calculate the fees
-        amount = amount - getCommissionFee(token, amount);
-
+        uint commissionFee = getCommissionFee(token, amount);
 
         Client.EVMTokenAmount[]
             memory tokenAmounts = new Client.EVMTokenAmount[](1);
         Client.EVMTokenAmount memory tokenAmount = Client.EVMTokenAmount({
             token: token,
-            amount: amount
+            amount: amount - commissionFee
         });
         tokenAmounts[0] = tokenAmount;
 
@@ -226,7 +231,7 @@ contract LiquaGateway is
     /// @dev This function reverts if there are no funds to withdraw or if the transfer fails.
     /// It should only be callable by the owner of the contract.
     /// @param beneficiary The address to which the Ether should be sent.
-    function withdraw(address beneficiary) public onlyOwner {
+    function withdraw(address beneficiary) external onlyRole(TREASURY_ROLE) {
         // Retrieve the balance of this contract
         uint256 amount = address(this).balance;
 
@@ -247,7 +252,7 @@ contract LiquaGateway is
     function withdrawToken(
         address beneficiary,
         address token
-    ) public onlyOwner {
+    ) external onlyRole(TREASURY_ROLE) {
         // Retrieve the balance of this contract
         uint256 amount = IERC20(token).balanceOf(address(this));
 
@@ -256,12 +261,17 @@ contract LiquaGateway is
 
         IERC20(token).safeTransfer(beneficiary, amount);
     }
+
+    function supportsInterface(bytes4 interfaceId) public view override(AccessControlUpgradeable, CCIPReceiverUpgradeable) returns (bool) {
+        return super.supportsInterface(interfaceId);
+    }
+
     function setTokenFeeConfig(
         address token,
         uint256 fee,
         uint256 minAmount,
         uint256 maxAmount
-    ) public onlyOwner {
+    ) public onlyRole(DEFAULT_ADMIN_ROLE) {
         tokenFeeConfigs[token] = TokenFeeConfig({
             fee: fee,
             minAmount: minAmount,

@@ -22,7 +22,7 @@ contract DepolyScript is Script, Helper {
         vm.startBroadcast(deployerPrivateKey);
 
 
-        (address router, address linkToken,,) = getConfigFromNetwork(network);
+        (address router, ,address linkToken,,) = getConfigFromNetwork(network);
 
         address proxy = Upgrades.deployUUPSProxy(
             "LiquaGateway.sol",

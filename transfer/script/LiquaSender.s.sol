@@ -22,7 +22,7 @@ contract SendMessage is Script, Helper {
 
         address gateway = 0xC8940d11a671beed2b7bD09F3256A40148a14812;
 
-        (, , , uint64 destinationChainId) = getConfigFromNetwork(destination);
+        (, , , , uint64 destinationChainId) = getConfigFromNetwork(destination);
         (address ccipBnM,) = getDummyTokensFromNetwork(SupportedNetworks.ETHEREUM_SEPOLIA);
 
         Client.EVMTokenAmount[]
