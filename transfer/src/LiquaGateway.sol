@@ -10,6 +10,7 @@ import {SafeERC20} from "@chainlink/contracts-ccip/src/v0.8/vendor/openzeppelin-
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {BytesLib} from "./library/BytesLib.sol";
 import {CCIPReceiverUpgradeable} from "./upgradeable/CCIPReceiverUpgradeable.sol";
 
@@ -17,7 +18,7 @@ contract LiquaGateway is
     Initializable,
     UUPSUpgradeable,
     CCIPReceiverUpgradeable,
-    OwnableUpgradeable
+    AccessControlUpgradeable
 {
     using SafeERC20 for IERC20;
     using BytesLib for bytes;
@@ -47,6 +48,8 @@ contract LiquaGateway is
     }
     mapping (address => TokenFeeConfig) public tokenFeeConfigs;
 
+    bytes32 public constant TREASURY_ROLE = keccak256("TREASURY_ROLE");
+
     // constructor() {
     //     _disableInitializers();
     // }
@@ -54,10 +57,16 @@ contract LiquaGateway is
     function initialize(address _router, address _link) public initializer {
         __CCIPReceiverUpgradeable_init(_router);
         i_ccipRouter = IRouterClient(_router);
+
+        __AccessControl_init();
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(TREASURY_ROLE, msg.sender);
+        _setRoleAdmin(TREASURY_ROLE, DEFAULT_ADMIN_ROLE);
+
         i_link = _link;
     }
 
-    function _authorizeUpgrade(address) internal override onlyOwner {}
+    function _authorizeUpgrade(address) internal override onlyRole(DEFAULT_ADMIN_ROLE) {}
 
     // Event emitted when a message is sent to another chain.
     event MessageSent(
@@ -226,7 +235,7 @@ contract LiquaGateway is
     /// @dev This function reverts if there are no funds to withdraw or if the transfer fails.
     /// It should only be callable by the owner of the contract.
     /// @param beneficiary The address to which the Ether should be sent.
-    function withdraw(address beneficiary) public onlyOwner {
+    function withdraw(address beneficiary) external onlyRole(TREASURY_ROLE) {
         // Retrieve the balance of this contract
         uint256 amount = address(this).balance;
 
@@ -247,7 +256,7 @@ contract LiquaGateway is
     function withdrawToken(
         address beneficiary,
         address token
-    ) public onlyOwner {
+    ) external onlyRole(TREASURY_ROLE) {
         // Retrieve the balance of this contract
         uint256 amount = IERC20(token).balanceOf(address(this));
 
@@ -261,7 +270,7 @@ contract LiquaGateway is
         uint256 fee,
         uint256 minAmount,
         uint256 maxAmount
-    ) public onlyOwner {
+    ) public onlyRole(DEFAULT_ADMIN_ROLE) {
         tokenFeeConfigs[token] = TokenFeeConfig({
             fee: fee,
             minAmount: minAmount,
