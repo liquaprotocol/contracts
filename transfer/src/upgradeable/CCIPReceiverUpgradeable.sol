@@ -37,7 +37,7 @@ abstract contract CCIPReceiverUpgradeable is
     /// it at the time of execution (EXTCODESIZE returns 0), only tokens will be transferred.
     function supportsInterface(
         bytes4 interfaceId
-    ) public pure virtual override returns (bool) {
+    ) public view virtual override returns (bool) {
         return
             interfaceId == type(IAny2EVMMessageReceiver).interfaceId ||
             interfaceId == type(IERC165).interfaceId;
