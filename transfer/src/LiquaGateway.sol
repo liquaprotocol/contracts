@@ -37,7 +37,6 @@ contract LiquaGateway is
     error NotEnoughFees(uint256 paidFees, uint256 calculatedFees); // Used to make sure user paid enough fees
 
     /// @notice The CCIP router contract
-    IRouterClient internal i_ccipRouter;
     address internal i_link;
     bytes32[] public receivedMessages; // Array to keep track of the IDs of received messages.
 
@@ -56,7 +55,6 @@ contract LiquaGateway is
 
     function initialize(address _router, address _link) public initializer {
         __CCIPReceiverUpgradeable_init(_router);
-        i_ccipRouter = IRouterClient(_router);
 
         __AccessControl_init();
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -93,7 +91,7 @@ contract LiquaGateway is
     function getSupportedTokens(
         uint64 chainSelector
     ) external view returns (address[] memory tokens) {
-        tokens = IRouterClient(i_ccipRouter).getSupportedTokens(chainSelector);
+        tokens = IRouterClient(i_router).getSupportedTokens(chainSelector);
     }
 
     /// @param destinationChainSelector The destination chainSelector
@@ -103,7 +101,7 @@ contract LiquaGateway is
         uint64 destinationChainSelector,
         Client.EVM2AnyMessage calldata message
     ) external view returns (uint256 fee) {
-        return i_ccipRouter.getFee(destinationChainSelector, message);
+        return IRouterClient(i_router).getFee(destinationChainSelector, message);
     }
 
     function getCommissionFee(
@@ -123,7 +121,7 @@ contract LiquaGateway is
 
     // /// @notice Returns the CCIP router contract.
     function getRouter() public view override returns (address) {
-        return getRouter();
+        return super.getRouter();
     }
 
     /// @notice Simply forwards the request to the CCIP router and returns the result.
