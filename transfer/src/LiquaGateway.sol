@@ -127,7 +127,6 @@ contract LiquaGateway is
     /// @notice Simply forwards the request to the CCIP router and returns the result.
     /// @param destinationChainSelector The destination chainSelector
     /// @param receiver The address of the recipient on the destination blockchain.
- // /// @param message The string text to be sent.
     /// @param token The address of the token to transfer.
     /// @param amount The amount of the token to transfer.
     /// @return messageId The ID of the message that was sent.
@@ -262,6 +261,11 @@ contract LiquaGateway is
 
         IERC20(token).safeTransfer(beneficiary, amount);
     }
+
+    function supportsInterface(bytes4 interfaceId) public view override(AccessControlUpgradeable, CCIPReceiverUpgradeable) returns (bool) {
+        return super.supportsInterface(interfaceId);
+    }
+
     function setTokenFeeConfig(
         address token,
         uint256 fee,
