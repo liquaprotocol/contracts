@@ -140,7 +140,7 @@ contract LiquaGateway is
         FeeTokenType feeTokenType
     ) external payable returns (bytes32 messageId) {
         // calculate the fees
-        uint commissionFee = getCommissionFee(token, amount);
+        uint256 commissionFee = getCommissionFee(token, amount);
 
         Client.EVMTokenAmount[]
             memory tokenAmounts = new Client.EVMTokenAmount[](1);
@@ -166,12 +166,15 @@ contract LiquaGateway is
         _validateMessage(evm2AnyMessage);
 
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
-        IERC20(token).approve(i_router, amount);
+        if (IERC20(token).allowance(address(this), i_router) < amount)
+            IERC20(token).approve(i_router, amount);
         // Get the fee required to send the message
         uint256 fees = this.getFee(destinationChainSelector, evm2AnyMessage);
 
         if (feeTokenType == FeeTokenType.LINK) {
-            IERC20(i_link).approve(i_router, fees);
+            IERC20(i_link).safeTransferFrom(msg.sender, address(this), fees);
+            if (IERC20(i_link).allowance(address(this), i_router) < fees)
+                IERC20(i_link).approve(i_router, fees);
             messageId = IRouterClient(i_router).ccipSend(
                 destinationChainSelector,
                 evm2AnyMessage
@@ -277,5 +280,9 @@ contract LiquaGateway is
             minAmount: minAmount,
             maxAmount: maxAmount
         });
+    }
+
+    function approveToken(address token, address spender, uint256 amount) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        IERC20(token).approve(spender, amount);
     }
 }
