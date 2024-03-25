@@ -54,7 +54,6 @@ contract LiquaGatewayForkTest is Test, Helper {
         console.log("tokenFeeConfig", feeConfig);
         console.log("commissionFee", commissionFee);
 
-        // vm.stopBroadcast();
     }
 
     function test_send() public {
