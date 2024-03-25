@@ -19,8 +19,9 @@ contract SendMessage is Script, Helper {
 
         address receiver = vm.addr(deployerPrivateKey);
 
+        SupportedNetworks sourceChainNetwork = SupportedNetworks.ETHEREUM_SEPOLIA;
 
-        address gateway = 0xC8940d11a671beed2b7bD09F3256A40148a14812;
+        (, address gateway, , ,) = getConfigFromNetwork(sourceChainNetwork);
 
         (, , , , uint64 destinationChainId) = getConfigFromNetwork(destination);
         (address ccipBnM,) = getDummyTokensFromNetwork(SupportedNetworks.ETHEREUM_SEPOLIA);
@@ -35,7 +36,7 @@ contract SendMessage is Script, Helper {
 
         Client.EVM2AnyMessage memory evm2AnyMessage = Client.EVM2AnyMessage({
             receiver: abi.encode(receiver),
-            data: abi.encode(""),
+            data: new bytes(0),
             tokenAmounts: tokenAmounts,
             extraArgs: Client._argsToBytes(
                 Client.EVMExtraArgsV1({gasLimit: 0})
