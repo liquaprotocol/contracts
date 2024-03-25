@@ -9,6 +9,9 @@ remappings = [
 solc = '0.8.20'
 build_info = true
 extra_output = ["storageLayout"]
+gas_reports = ["LiquaGateway"]
+ffi = true
+
 
 [rpc_endpoints]
 ethereumSepolia = "${ETHEREUM_SEPOLIA_RPC_URL}"
@@ -21,5 +24,6 @@ baseSepolia = "${BASE_SEPOLIA_RPC_URL}"
 
 ethereum = "${ETHEREUM_RPC_URL}"
 polygon = "${POLYGON_RPC_URL}"
+arbitrum = "${ARBITRUM_RPC_URL}"
 
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
