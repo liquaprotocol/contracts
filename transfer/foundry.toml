@@ -10,6 +10,7 @@ solc = '0.8.20'
 build_info = true
 extra_output = ["storageLayout"]
 gas_reports = ["LiquaGateway"]
+no-match-path = "test/fork/*"
 ffi = true
 
 
@@ -25,5 +26,9 @@ baseSepolia = "${BASE_SEPOLIA_RPC_URL}"
 ethereum = "${ETHEREUM_RPC_URL}"
 polygon = "${POLYGON_RPC_URL}"
 arbitrum = "${ARBITRUM_RPC_URL}"
+optimism = "${OPTIMISM_RPC_URL}"
+avalanche = "${AVALANCHE_RPC_URL}"
+base = "${BASE_RPC_URL}"
+bnbChain = "${BNB_CHAIN_RPC_URL}"
 
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
