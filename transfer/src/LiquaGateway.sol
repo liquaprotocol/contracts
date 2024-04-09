@@ -70,8 +70,10 @@ contract LiquaGateway is
     event MessageSent(
         bytes32 indexed messageId, // The unique ID of the CCIP message.
         uint64 indexed destinationChainSelector, // The chain selector of the destination chain.
+        address sender, // The address of the sender on the source chain.
         address receiver, // The address of the receiver on the destination chain.
         Client.EVMTokenAmount tokenAmount, // The token amount that was sent.
+        FeeTokenType feeTokenType, // The type of token used for fees.
         uint256 fees // The fees paid for sending the CCIP message.
     );
 
@@ -191,8 +193,10 @@ contract LiquaGateway is
         emit MessageSent(
             messageId,
             destinationChainSelector,
+            msg.sender,
             receiver,
             tokenAmount,
+            feeTokenType,
             fees
         );
     }
