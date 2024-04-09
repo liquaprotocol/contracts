@@ -80,6 +80,21 @@ contract MainnetHelper {
         0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913;
 
 
+    address constant liquaOptimism =
+        0x260E2F070026e81d65548a15acFd6Fc9FDDE1C0a;
+    address constant liquaAvalanche =
+        0x260E2F070026e81d65548a15acFd6Fc9FDDE1C0a;
+    address constant liquaArbitrum =
+        0x4B789C88dcD5D2BB449f09300785bDEFc8E14608;
+    address constant liquaPolygon = 
+        0xe0629bA9108ec108e050E7F37c5CB7985338eCDE;
+    address constant liquaBnbChain = 
+        0x0000000000000000000000000000000000000000;
+    address constant liquaBase = 
+        0x260E2F070026e81d65548a15acFd6Fc9FDDE1C0a; 
+    
+
+
     function getLiquaGatewayDeployConfig(SupportedNetworks network)
         public
         pure

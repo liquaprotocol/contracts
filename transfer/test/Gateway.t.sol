@@ -18,7 +18,7 @@ import {Upgrades} from "openzeppelin-foundry-upgrades/Upgrades.sol";
 import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 
 
-contract GateWayTest is Test {
+contract GatewayTest is Test {
     MockCCIPRouter public router;
     WETH9 public weth;
     MockLinkToken public link;
@@ -169,6 +169,7 @@ contract GateWayTest is Test {
         });
 
         uint256 fee = gateway.getFee(destinationChainId, evm2AnyMessage);
+        console.log("fee", fee);
 
         vm.expectRevert();
         gateway.send(
