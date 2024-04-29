@@ -1,7 +1,14 @@
 {
-  "name": "ccip-starter-kit-foundry",
+  "name": "liqua",
   "devDependencies": {
     "@chainlink/contracts": "^0.6.1",
     "@chainlink/contracts-ccip": "^1.2.1"
+  },
+  "dependencies": {
+    "@certusone/wormhole-sdk": "^0.10.15",
+    "@improbable-eng/grpc-web-node-http-transport": "^0.15.0",
+    "dotenv": "^16.4.5",
+    "ethers": "^5.7.2",
+    "ts-node": "^10.9.2"
   }
 }

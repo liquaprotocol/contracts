@@ -11,4 +11,4 @@ openzeppelin-foundry-upgrades/=lib/openzeppelin-foundry-upgrades/src/
 solidity-stringutils/=lib/openzeppelin-foundry-upgrades/lib/solidity-stringutils/
 @openzeppelin/=node_modules/@openzeppelin/
 @openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/
-
+wormhole-solidity-sdk/=lib/wormhole-solidity-sdk/src/
